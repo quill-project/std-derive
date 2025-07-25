@@ -3,7 +3,7 @@ mod std::derive
 
 use macro::*
 
-pub fun as_hash(input: List[Token], ctx: Compiler) -> List[Token] {
+pub fun derive_as_hash(input: List[Token], ctx: Compiler) -> List[Token] {
     val mem_as_hash: Fun(Node, String) -> String = |mem_t, mem_v| {
         match mem_t {
             Node::NamedType(Triplet(_, mtp, _)) {

@@ -3,7 +3,7 @@ mod std::derive
 
 use macro::*
 
-pub fun eq(input: List[Token], ctx: Compiler) -> List[Token] {
+pub fun derive_eq(input: List[Token], ctx: Compiler) -> List[Token] {
     match input |> parse_decl(ctx) {
 
         Some(Node::StructDecl(StructDecl(_, path, type_args, members))) {
