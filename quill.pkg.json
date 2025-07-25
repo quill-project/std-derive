@@ -1,0 +1,15 @@
+{
+    "name": "std-derive",
+    "authors": ["schwalbe_t"],
+    "description": "Implements the `derive`-macro and the basic `derive_*`-macros.",
+    "type": "plugin",
+    "backend": "c",
+    "dependencies": [
+        "https://github.com/quill-project/std-c",
+        "https://github.com/quill-project/macro"
+    ],
+    "macros": {
+        "derive": "std::derive::derive",
+        "derive_eq": "std::derive::eq"
+    }
+}

@@ -1,0 +1,13 @@
+
+mod std::derive
+
+use macro::*
+
+pub fun derive(input: List[Token], ctx: Compiler) -> List[Token]
+    = input 
+    |> values()
+    |> filter(|t| t.kind == TokenKind::Ident)
+    |> map[Token, String](|t| "@derive_" |> concat(t.content))
+    |> join("\n")
+    |> tokenize(ctx)
+    |> expect("hard-coded invocation - should always be valid")

@@ -1,0 +1,67 @@
+
+mod std::derive
+
+use macro::*
+
+pub fun eq(input: List[Token], ctx: Compiler) -> List[Token] {
+    match input |> parse_decl(ctx) {
+
+        Some(Node::StructDecl(StructDecl(_, path, type_args, members))) {
+            val p: String = path |> values() |> join("::")
+            val ta: String = type_args |> values() |> join(", ")
+            val comps: String = members
+                |> values()
+                |> map[Pair[String, Node], String](
+                    |mem| "lhs._ == rhs._" |> fmt(mem.first, mem.first)
+                )
+                |> join(" && ")
+            val eq_impl = "pub fun _::eq[_](lhs: _[_], rhs: _[_]) -> Bool = _"
+                |> fmt(p, ta, p, ta, p, ta, comps)
+            val eq_impl_t: List[Token] = eq_impl 
+                |> tokenize(ctx)
+                |> expect("hard-coded declaration - should be valid")
+            val neq_impl = "pub fun _::_[_](lhs: _[_], rhs: _[_]) -> Bool = "
+                |> concat("!_::eq[_](lhs, rhs)")
+                |> fmt(p, "not_eq", ta, p, ta, p, ta, p, ta)
+            val neq_impl_t: List[Token] = neq_impl
+                |> tokenize(ctx)
+                |> expect("hard-coded declaration - should be valid")
+            return input 
+                |> concat(eq_impl_t) 
+                |> concat(neq_impl_t)
+        }
+        
+        Some(Node::EnumDecl(EnumDecl(_, path, type_args, members))) {
+            val p: String = path |> values() |> join("::")
+            val ta: String = type_args |> values() |> join(", ")
+            val comps: String = members
+                |> values()
+                |> map[Pair[String, Node], String](
+                    |mem| "_(a) { match rhs { _(b) { return a == b } _ { return false } } }" 
+                        |> fmt(mem.first, mem.first, "_")
+                )
+                |> join(" ")
+            val eq_impl = "pub fun _::eq[_](lhs: _[_], rhs: _[_]) -> Bool {"
+                |> concat("match lhs {")
+                |> concat("_")
+                |> concat("_ { return false }")
+                |> concat("}")
+                |> concat("}")
+                |> fmt(p, ta, p, ta, p, ta, comps, "_")
+            val eq_impl_t: List[Token] = eq_impl 
+                |> tokenize(ctx)
+                |> expect("hard-coded declaration - should be valid")
+            val neq_impl = "pub fun _::_[_](lhs: _[_], rhs: _[_]) -> Bool = "
+                |> concat("!_::eq[_](lhs, rhs)")
+                |> fmt(p, "not_eq", ta, p, ta, p, ta, p, ta)
+            val neq_impl_t: List[Token] = neq_impl
+                |> tokenize(ctx)
+                |> expect("hard-coded declaration - should be valid")
+            return input 
+                |> concat(eq_impl_t) 
+                |> concat(neq_impl_t)
+        }
+        
+        _ { return input }
+    }
+}
