@@ -10,6 +10,7 @@
     ],
     "macros": {
         "derive": "std::derive::derive",
-        "derive_eq": "std::derive::eq"
+        "derive_eq": "std::derive::eq",
+        "derive_as_hash": "std::derive::as_hash"
     }
 }
