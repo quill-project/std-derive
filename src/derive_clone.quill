@@ -3,12 +3,12 @@ mod std::derive
 
 use macro::*
 
-pub fun as_hash(input: List[Token], ctx: Compiler) -> List[Token] {
-    val mem_as_hash: Fun(Node, String) -> String = |mem_t, mem_v| {
+pub fun clone(input: List[Token], ctx: Compiler) -> List[Token] {
+    val mem_clone: Fun(Node, String) -> String = |mem_t, mem_v| {
         match mem_t {
             Node::NamedType(Triplet(_, mtp, _)) {
-                return "(_::as_hash(_))" 
-                    |> fmt(mtp |> values() |> join("::"), "_", mem_v)
+                return "_::clone(_)" 
+                    |> fmt(mtp |> values() |> join("::"), mem_v)
             }
             _ { return "(0)" }
         }
@@ -21,46 +21,51 @@ pub fun as_hash(input: List[Token], ctx: Compiler) -> List[Token] {
             val mems: String = members
                 |> values()
                 |> map[Pair[String, Node], String](
-                    |mem| mem_as_hash(mem.second, "self." |> concat(mem.first))
+                    |mem| mem_clone(mem.second, "self." |> concat(mem.first))
                 )
-                |> join(" |> std::hash::combine_ord")
-            val as_hash_impl = "pub fun _::as_hash[_](self: _[_]) -> Int = _"
-                |> fmt(p, "_", ta, p, ta, mems)
-            val as_hash_impl_t: List[Token] = as_hash_impl 
+                |> join(", ")
+            val clone_impl = "pub fun _::clone[_](self: _[_]) -> mut _[_] = _[_](_)"
+                |> fmt(p, ta, p, ta, p, ta, p, ta, mems)
+            println(clone_impl)
+            val clone_impl_t: List[Token] = clone_impl 
                 |> tokenize(ctx)
                 |> expect("hard-coded declaration - should be valid")
             return input 
-                |> concat(as_hash_impl_t)
+                |> concat(clone_impl_t)
         }
         
         Some(Node::EnumDecl(EnumDecl(_, path, type_args, members))) {
             val p: String = path |> values() |> join("::")
             val ta: String = type_args |> values() |> join(", ")
             val mems: String = members
-                |> indices()
-                |> map[Int, String](|i| {
-                    val mem: Pair[String, Node] = members |> at(i)
+                |> values()
+                |> map[Pair[String, Node], String](|mem| {
                     val s = StringBuilder::empty()
                     s |> push(mem.first)
                     s |> push("(v) { return ")
-                    s |> push(i |> as_string())
-                    s |> push(" |> hash::combine_ord")
-                    s |> push(mem_as_hash(mem.second, "v"))
-                    s |> push(" }")
+                    s |> push(p)
+                    s |> push("::")
+                    s |> push(mem.first)
+                    s |> push("[")
+                    s |> push(ta)
+                    s |> push("](")
+                    s |> push(mem_clone(mem.second, "v"))
+                    s |> push(") }")
                     return s |> as_string()
                 })
                 |> join("\n")
-            val as_hash_impl = "pub fun _::as_hash[_](self: _[_]) -> Int {"
+            val clone_impl = "pub fun _::clone[_](self: _[_]) -> mut _[_] {"
                 |> concat("match self {")
                 |> concat("_")
                 |> concat("}")
                 |> concat("}")
-                |> fmt(p, "_", ta, p, ta, mems)
-            val as_hash_impl_t: List[Token] = as_hash_impl 
+                |> fmt(p, ta, p, ta, p, ta, mems)
+            println(clone_impl)
+            val clone_impl_t: List[Token] = clone_impl 
                 |> tokenize(ctx)
                 |> expect("hard-coded declaration - should be valid")
             return input 
-                |> concat(as_hash_impl_t)
+                |> concat(clone_impl_t)
         }
         
         _ { return input }
