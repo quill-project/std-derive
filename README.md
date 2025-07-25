@@ -3,7 +3,7 @@ Implements the `derive`-macro and the basic `derive_*`-macros.
 
 ### Usage Example
 
-```rs
+```
 // Writing the following before a type declaration ('struct' or 'enum')...
 @derive(eq, clone, as_hash, as_string)
 pub struct Cat(name: String, age: Int)
